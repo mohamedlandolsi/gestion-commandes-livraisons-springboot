@@ -1,7 +1,9 @@
 package itbs.mohamedlandolsi.gestioncommandeslivraisons.service;
 
+import itbs.mohamedlandolsi.gestioncommandeslivraisons.model.Client;
 import itbs.mohamedlandolsi.gestioncommandeslivraisons.model.Commande;
 import itbs.mohamedlandolsi.gestioncommandeslivraisons.model.Commande.StatutCommande;
+import itbs.mohamedlandolsi.gestioncommandeslivraisons.repository.ClientRepository;
 import itbs.mohamedlandolsi.gestioncommandeslivraisons.repository.CommandeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,10 +16,12 @@ import java.util.Optional;
 public class CommandeService {
 
     private final CommandeRepository commandeRepository;
+    private final ClientRepository clientRepository;
 
     @Autowired
-    public CommandeService(CommandeRepository commandeRepository) {
+    public CommandeService(CommandeRepository commandeRepository, ClientRepository clientRepository) {
         this.commandeRepository = commandeRepository;
+        this.clientRepository = clientRepository;
     }
 
     public List<Commande> getAllCommandes() {
@@ -29,6 +33,21 @@ public class CommandeService {
     }
 
     public Commande saveCommande(Commande commande) {
+        // Validate if the client exists before saving the order
+        if (commande.getClient() == null || commande.getClient().getId() == null) {
+            throw new IllegalArgumentException("Client information is required");
+        }
+        
+        Long clientId = commande.getClient().getId();
+        if (!clientRepository.existsById(clientId)) {
+            throw new IllegalArgumentException("Client with ID " + clientId + " does not exist");
+        }
+        
+        // Ensure we have the complete client entity
+        Client client = clientRepository.findById(clientId)
+            .orElseThrow(() -> new IllegalArgumentException("Client with ID " + clientId + " not found"));
+        commande.setClient(client);
+        
         return commandeRepository.save(commande);
     }
 

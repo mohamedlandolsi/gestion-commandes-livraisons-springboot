@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/commandes")
@@ -41,23 +43,37 @@ public class CommandeController {
 
     // Create a new order
     @PostMapping
-    public ResponseEntity<Commande> createCommande(@Valid @RequestBody Commande commande) {
+    public ResponseEntity<?> createCommande(@Valid @RequestBody Commande commande) {
         if (commande.getId() != null && commandeService.existsById(commande.getId())) {
             return ResponseEntity.badRequest().build();
         }
-        Commande savedCommande = commandeService.saveCommande(commande);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedCommande);
+        
+        try {
+            Commande savedCommande = commandeService.saveCommande(commande);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedCommande);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
 
     // Update an existing order
     @PutMapping("/{id}")
-    public ResponseEntity<Commande> updateCommande(@PathVariable Long id, @Valid @RequestBody Commande commande) {
+    public ResponseEntity<?> updateCommande(@PathVariable Long id, @Valid @RequestBody Commande commande) {
         if (!commandeService.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
+        
         commande.setId(id);
-        Commande updatedCommande = commandeService.saveCommande(commande);
-        return ResponseEntity.ok(updatedCommande);
+        try {
+            Commande updatedCommande = commandeService.saveCommande(commande);
+            return ResponseEntity.ok(updatedCommande);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
 
     // Delete an order
