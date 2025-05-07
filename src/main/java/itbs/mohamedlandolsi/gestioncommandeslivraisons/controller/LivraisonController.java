@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/livraisons")
@@ -73,7 +74,7 @@ public class LivraisonController {
         return ResponseEntity.noContent().build();
     }
 
-    // Update delivery status
+    // Update delivery status with "statut" parameter
     @PatchMapping("/{id}/statut")
     public ResponseEntity<Livraison> updateLivraisonStatut(
             @PathVariable Long id,
@@ -84,6 +85,29 @@ public class LivraisonController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(updatedLivraison);
+    }
+    
+    // Update delivery status with "status" in URL and JSON body
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Livraison> updateLivraisonStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> statusUpdate) {
+        
+        String statusValue = statusUpdate.get("status");
+        if (statusValue == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        try {
+            StatutLivraison statut = StatutLivraison.valueOf(statusValue);
+            Livraison updatedLivraison = livraisonService.updateLivraisonStatus(id, statut);
+            if (updatedLivraison == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(updatedLivraison);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     // Assign transporter to delivery
