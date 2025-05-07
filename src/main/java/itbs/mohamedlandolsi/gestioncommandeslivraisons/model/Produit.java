@@ -1,5 +1,6 @@
 package itbs.mohamedlandolsi.gestioncommandeslivraisons.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -31,4 +32,9 @@ public class Produit {
     @NotNull(message = "Le stock est obligatoire")
     @Positive(message = "Le stock doit être positif")
     private Integer stock;
+    
+    @ManyToOne
+    @JoinColumn(name = "fournisseur_id")
+    @JsonBackReference
+    private Fournisseur fournisseur;
 }

@@ -11,4 +11,7 @@ public interface LigneCommandeRepository extends JpaRepository<LigneCommande, Lo
     List<LigneCommande> findByCommandeId(Long commandeId);
     List<LigneCommande> findByProduitId(Long produitId);
     void deleteByCommandeId(Long commandeId);
+    
+    // Find order lines by multiple product IDs
+    List<LigneCommande> findByProduitIdIn(List<Long> produitIds);
 }
