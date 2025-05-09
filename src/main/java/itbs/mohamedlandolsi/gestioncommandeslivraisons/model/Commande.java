@@ -1,6 +1,7 @@
 package itbs.mohamedlandolsi.gestioncommandeslivraisons.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -34,6 +35,7 @@ public class Commande {
     private BigDecimal montantTotal = BigDecimal.ZERO;
 
     @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<LigneCommande> lignesCommande;
 
     @OneToOne(mappedBy = "commande", cascade = CascadeType.ALL)

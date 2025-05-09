@@ -1,5 +1,6 @@
 package itbs.mohamedlandolsi.gestioncommandeslivraisons.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -18,8 +19,9 @@ public class LigneCommande {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commande_id", nullable = false)
+    @JsonBackReference
     private Commande commande;
 
     @ManyToOne

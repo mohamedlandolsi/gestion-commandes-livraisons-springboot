@@ -15,7 +15,7 @@ Cette application permet de gérer l'ensemble du processus de commande et de liv
 
 ### Back-end
 - Java 17
-- Spring Boot 3.x
+- Spring Boot 3.4.4
 - Spring Data JPA
 - Spring Security
 - MySQL
@@ -101,6 +101,40 @@ L'API REST est disponible à l'URL de base `/api` avec les endpoints suivants:
 ### Fournisseurs
 - `GET /api/fournisseurs` - Liste tous les fournisseurs
 - `GET /api/fournisseurs/{id}/commandes` - Historique des commandes par fournisseur
+
+### Clients
+- `GET /api/clients` - Liste tous les clients
+- `GET /api/clients/{id}` - Détails d'un client
+- `POST /api/clients` - Crée un nouveau client
+- `PUT /api/clients/{id}` - Met à jour un client existant
+- `DELETE /api/clients/{id}` - Supprime un client
+
+### Produits
+- `GET /api/produits` - Liste tous les produits
+- `GET /api/produits/{id}` - Détails d'un produit
+- `POST /api/produits` - Crée un nouveau produit
+- `PUT /api/produits/{id}` - Met à jour un produit existant
+- `DELETE /api/produits/{id}` - Supprime un produit
+
+### Lignes de Commande
+- `GET /api/lignecommandes` - Liste toutes les lignes de commande
+- `GET /api/lignecommandes/{id}` - Détails d'une ligne de commande
+- `POST /api/lignecommandes` - Crée une nouvelle ligne de commande (généralement associée à une commande existante)
+- `PUT /api/lignecommandes/{id}` - Met à jour une ligne de commande existante
+- `DELETE /api/lignecommandes/{id}` - Supprime une ligne de commande
+
+### Paiements
+- `GET /api/paiements` - Liste tous les paiements
+- `GET /api/paiements/{id}` - Détails d'un paiement
+- `POST /api/paiements` - Enregistre un nouveau paiement (généralement associé à une commande)
+- `GET /api/commandes/{commandeId}/paiements` - Liste les paiements pour une commande spécifique
+
+### Transporteurs
+- `GET /api/transporteurs` - Liste tous les transporteurs
+- `GET /api/transporteurs/{id}` - Détails d'un transporteur
+- `POST /api/transporteurs` - Crée un nouveau transporteur
+- `PUT /api/transporteurs/{id}` - Met à jour un transporteur existant
+- `DELETE /api/transporteurs/{id}` - Supprime un transporteur
 
 ## Variables d'environnement
 
