@@ -1,5 +1,6 @@
 package itbs.mohamedlandolsi.gestioncommandeslivraisons.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class Paiement {
 
     @OneToOne
     @JoinColumn(name = "commande_id", nullable = false)
+    @JsonManagedReference("commande-paiement")
     private Commande commande;
 
     private LocalDateTime date = LocalDateTime.now();

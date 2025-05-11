@@ -12,7 +12,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**") // Ensure this matches your API base path
                 .allowedOrigins("http://localhost:3000") // Your Next.js frontend URL
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS") // Added PATCH explicitly
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }

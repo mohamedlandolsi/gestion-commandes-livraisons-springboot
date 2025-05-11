@@ -1,5 +1,6 @@
 package itbs.mohamedlandolsi.gestioncommandeslivraisons.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class Livraison {
 
     @OneToOne
     @JoinColumn(name = "commande_id", nullable = false)
+    @JsonManagedReference("livraison-commande")
     private Commande commande;
 
     @ManyToOne
@@ -26,6 +28,8 @@ public class Livraison {
     private Transporteur transporteur;
 
     private LocalDateTime dateLivraison;
+
+    private String adresseLivraison; // Added this field
 
     private BigDecimal cout;
 

@@ -1,5 +1,6 @@
 package itbs.mohamedlandolsi.gestioncommandeslivraisons.service;
 
+import itbs.mohamedlandolsi.gestioncommandeslivraisons.dto.LivraisonRequestDTO;
 import itbs.mohamedlandolsi.gestioncommandeslivraisons.model.Commande;
 import itbs.mohamedlandolsi.gestioncommandeslivraisons.model.LigneCommande;
 import itbs.mohamedlandolsi.gestioncommandeslivraisons.model.Livraison;
@@ -13,6 +14,8 @@ import itbs.mohamedlandolsi.gestioncommandeslivraisons.repository.TransporteurRe
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -53,6 +56,67 @@ public class LivraisonService {
         return livraisonRepository.save(livraison);
     }
 
+    @Transactional
+    public Livraison createLivraisonFromDTO(LivraisonRequestDTO dto) {
+        Commande commande = commandeRepository.findById(dto.getCommandeId())
+            .orElseThrow(() -> new IllegalArgumentException("Commande non trouvée avec ID: " + dto.getCommandeId()));
+
+        Transporteur transporteur = null;
+        if (dto.getTransporteurId() != null) {
+            transporteur = transporteurRepository.findById(dto.getTransporteurId())
+                .orElseThrow(() -> new IllegalArgumentException("Transporteur non trouvé avec ID: " + dto.getTransporteurId()));
+        }
+
+        Livraison livraison = new Livraison();
+        livraison.setCommande(commande);
+        livraison.setTransporteur(transporteur);
+        livraison.setDateLivraison(dto.getDateLivraison());
+        livraison.setAdresseLivraison(dto.getAdresseLivraison());
+        livraison.setCout(dto.getCout());
+        livraison.setStatut(dto.getStatut() != null ? dto.getStatut() : StatutLivraison.EN_ATTENTE);
+
+        return livraisonRepository.save(livraison);
+    }
+
+    @Transactional
+    public Livraison updateLivraisonFromDTO(Long id, LivraisonRequestDTO dto) {
+        Livraison livraison = livraisonRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Livraison non trouvée avec ID: " + id));
+
+        if (dto.getCommandeId() != null) {
+            Commande commande = commandeRepository.findById(dto.getCommandeId())
+                .orElseThrow(() -> new IllegalArgumentException("Commande non trouvée avec ID: " + dto.getCommandeId()));
+            livraison.setCommande(commande);
+        }
+
+        if (dto.getTransporteurId() != null) {
+            Transporteur transporteur = transporteurRepository.findById(dto.getTransporteurId())
+                .orElseThrow(() -> new IllegalArgumentException("Transporteur non trouvé avec ID: " + dto.getTransporteurId()));
+            livraison.setTransporteur(transporteur);
+        } else {
+            livraison.setTransporteur(null);
+        }
+
+        if (dto.getDateLivraison() != null) {
+            livraison.setDateLivraison(dto.getDateLivraison());
+        }
+        if (dto.getAdresseLivraison() != null) {
+            livraison.setAdresseLivraison(dto.getAdresseLivraison());
+        }
+        if (dto.getCout() != null) {
+            livraison.setCout(dto.getCout());
+        }
+        if (dto.getStatut() != null) {
+            StatutLivraison oldStatus = livraison.getStatut();
+            livraison.setStatut(dto.getStatut());
+            if (dto.getStatut() == StatutLivraison.LIVREE && oldStatus != StatutLivraison.LIVREE) {
+                updateStockOnDelivery(livraison);
+            }
+        }
+
+        return livraisonRepository.save(livraison);
+    }
+
     public void deleteLivraison(Long id) {
         livraisonRepository.deleteById(id);
     }
@@ -61,52 +125,39 @@ public class LivraisonService {
         return livraisonRepository.existsById(id);
     }
 
-    /**
-     * Updates the status of a delivery and handles stock updates if delivery is completed
-     * @param id delivery ID
-     * @param statut new status
-     * @return updated delivery
-     */
     @Transactional
     public Livraison updateLivraisonStatus(Long id, StatutLivraison statut) {
         Optional<Livraison> livraisonOpt = livraisonRepository.findById(id);
         if (livraisonOpt.isEmpty()) {
             return null;
         }
-        
+
         Livraison livraison = livraisonOpt.get();
         StatutLivraison oldStatus = livraison.getStatut();
         livraison.setStatut(statut);
-        
-        // If the delivery status changes to LIVREE, update the stock
+
         if (statut == StatutLivraison.LIVREE && oldStatus != StatutLivraison.LIVREE) {
             updateStockOnDelivery(livraison);
         }
-        
+
         return livraisonRepository.save(livraison);
     }
 
-    /**
-     * Updates stock quantities when a delivery is completed
-     * @param livraison the completed delivery
-     */
     private void updateStockOnDelivery(Livraison livraison) {
         Commande commande = livraison.getCommande();
         if (commande == null) {
             throw new IllegalStateException("No command associated with this delivery");
         }
-        
+
         List<LigneCommande> lignesCommande = ligneCommandeRepository.findByCommandeId(commande.getId());
-        
+
         for (LigneCommande ligne : lignesCommande) {
             Produit produit = ligne.getProduit();
             if (produit != null) {
-                // Update stock - should be called only after confirming delivery
                 produitService.reduceStock(produit.getId(), ligne.getQuantite());
             }
         }
-        
-        // Update order status to reflect delivery completion
+
         commande.setStatut(Commande.StatutCommande.LIVREE);
         commandeRepository.save(commande);
     }
@@ -114,11 +165,11 @@ public class LivraisonService {
     public Livraison assignTransporteur(Long livraisonId, Long transporteurId) {
         Optional<Livraison> livraisonOpt = livraisonRepository.findById(livraisonId);
         Optional<Transporteur> transporteurOpt = transporteurRepository.findById(transporteurId);
-        
+
         if (livraisonOpt.isEmpty() || transporteurOpt.isEmpty()) {
             return null;
         }
-        
+
         Livraison livraison = livraisonOpt.get();
         livraison.setTransporteur(transporteurOpt.get());
         return livraisonRepository.save(livraison);

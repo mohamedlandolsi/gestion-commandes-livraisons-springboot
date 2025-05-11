@@ -1,5 +1,6 @@
 package itbs.mohamedlandolsi.gestioncommandeslivraisons.controller;
 
+import itbs.mohamedlandolsi.gestioncommandeslivraisons.dto.LivraisonRequestDTO;
 import itbs.mohamedlandolsi.gestioncommandeslivraisons.model.Livraison;
 import itbs.mohamedlandolsi.gestioncommandeslivraisons.model.Livraison.StatutLivraison;
 import itbs.mohamedlandolsi.gestioncommandeslivraisons.service.LivraisonService;
@@ -7,12 +8,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/livraisons")
@@ -42,26 +47,42 @@ public class LivraisonController {
 
     // Create a new delivery
     @PostMapping
-    public ResponseEntity<Livraison> createLivraison(@Valid @RequestBody Livraison livraison) {
-        if (livraison.getId() != null && livraisonService.existsById(livraison.getId())) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<?> createLivraison(@Valid @RequestBody LivraisonRequestDTO livraisonDTO) {
+        try {
+            Livraison savedLivraison = livraisonService.createLivraisonFromDTO(livraisonDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedLivraison);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "An unexpected error occurred on the server.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
-        Livraison savedLivraison = livraisonService.saveLivraison(livraison);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedLivraison);
     }
 
     // Update an existing delivery
     @PutMapping("/{id}")
-    public ResponseEntity<Livraison> updateLivraison(
-            @PathVariable Long id, 
-            @Valid @RequestBody Livraison livraison) {
+    public ResponseEntity<?> updateLivraison(
+            @PathVariable Long id,
+            @Valid @RequestBody LivraisonRequestDTO livraisonDTO) {
         
-        if (!livraisonService.existsById(id)) {
-            return ResponseEntity.notFound().build();
+        try {
+            Livraison updatedLivraison = livraisonService.updateLivraisonFromDTO(id, livraisonDTO);
+            if (updatedLivraison == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(updatedLivraison);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "An unexpected error occurred on the server.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
-        livraison.setId(id);
-        Livraison updatedLivraison = livraisonService.saveLivraison(livraison);
-        return ResponseEntity.ok(updatedLivraison);
     }
 
     // Delete a delivery
@@ -86,7 +107,7 @@ public class LivraisonController {
         }
         return ResponseEntity.ok(updatedLivraison);
     }
-    
+
     // Update delivery status with "status" in URL and JSON body
     @PatchMapping("/{id}/status")
     public ResponseEntity<Livraison> updateLivraisonStatus(
@@ -99,7 +120,7 @@ public class LivraisonController {
         }
         
         try {
-            StatutLivraison statut = StatutLivraison.valueOf(statusValue);
+            StatutLivraison statut = StatutLivraison.valueOf(statusValue.toUpperCase());
             Livraison updatedLivraison = livraisonService.updateLivraisonStatus(id, statut);
             if (updatedLivraison == null) {
                 return ResponseEntity.notFound().build();
@@ -115,7 +136,6 @@ public class LivraisonController {
     public ResponseEntity<Livraison> assignTransporteur(
             @PathVariable Long id,
             @RequestParam Long transporteurId) {
-        
         Livraison updatedLivraison = livraisonService.assignTransporteur(id, transporteurId);
         if (updatedLivraison == null) {
             return ResponseEntity.notFound().build();
@@ -162,5 +182,30 @@ public class LivraisonController {
         LocalDateTime fromDate = from != null ? from : LocalDateTime.now();
         List<Livraison> livraisons = livraisonService.getUpcomingLivraisons(fromDate);
         return ResponseEntity.ok(livraisons);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Map<String, Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, Object> errors = new HashMap<>();
+        errors.put("message", "Validation failed");
+        List<Map<String, String>> errorDetails = ex.getBindingResult().getAllErrors().stream()
+            .map(error -> {
+                Map<String, String> errorMap = new HashMap<>();
+                errorMap.put("field", ((FieldError) error).getField());
+                errorMap.put("message", error.getDefaultMessage());
+                return errorMap;
+            })
+            .collect(Collectors.toList());
+        errors.put("errors", errorDetails);
+        return errors;
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public Map<String, String> handleIllegalArgumentExceptions(IllegalArgumentException ex) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        return errorResponse;
     }
 }

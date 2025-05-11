@@ -21,7 +21,7 @@ public class LigneCommande {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commande_id", nullable = false)
-    @JsonBackReference
+    @JsonBackReference("commande-lignes") // Explicitly named to match Commande.lignesCommande
     private Commande commande;
 
     @ManyToOne

@@ -29,6 +29,6 @@ public class Client {
     private String adresse;
 
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @JsonManagedReference("client-commandes") // Explicitly named to match Commande.client
     private List<Commande> commandes;
 }

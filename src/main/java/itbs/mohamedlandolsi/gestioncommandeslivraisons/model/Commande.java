@@ -23,7 +23,7 @@ public class Commande {
 
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
-    @JsonBackReference
+    @JsonBackReference("client-commandes")
     private Client client;
 
     @NotNull
@@ -35,13 +35,15 @@ public class Commande {
     private BigDecimal montantTotal = BigDecimal.ZERO;
 
     @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @JsonManagedReference("commande-lignes")
     private List<LigneCommande> lignesCommande;
 
     @OneToOne(mappedBy = "commande", cascade = CascadeType.ALL)
+    @JsonBackReference("livraison-commande")
     private Livraison livraison;
 
     @OneToOne(mappedBy = "commande", cascade = CascadeType.ALL)
+    @JsonBackReference("commande-paiement")
     private Paiement paiement;
 
     public enum StatutCommande {
