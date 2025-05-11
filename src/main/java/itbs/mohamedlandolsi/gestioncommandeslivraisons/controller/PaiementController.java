@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/paiements")
@@ -54,13 +55,30 @@ public class PaiementController {
     @PutMapping("/{id}")
     public ResponseEntity<Paiement> updatePaiement(
             @PathVariable Long id,
-            @Valid @RequestBody Paiement paiement) {
+            @Valid @RequestBody Paiement paiementDetails) {
         
-        if (!paiementService.existsById(id)) {
+        Optional<Paiement> existingPaiementOptional = paiementService.getPaiementById(id);
+
+        if (existingPaiementOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        paiement.setId(id);
-        Paiement updatedPaiement = paiementService.savePaiement(paiement);
+
+        Paiement existingPaiement = existingPaiementOptional.get();
+
+        if (paiementDetails.getDate() != null) {
+            existingPaiement.setDate(paiementDetails.getDate());
+        }
+        if (paiementDetails.getMontantPaye() != null) {
+            existingPaiement.setMontantPaye(paiementDetails.getMontantPaye());
+        }
+        if (paiementDetails.getMode() != null) {
+            existingPaiement.setMode(paiementDetails.getMode());
+        }
+        if (paiementDetails.getStatut() != null) {
+            existingPaiement.setStatut(paiementDetails.getStatut());
+        }
+
+        Paiement updatedPaiement = paiementService.savePaiement(existingPaiement);
         return ResponseEntity.ok(updatedPaiement);
     }
 

@@ -30,6 +30,8 @@ public class Paiement {
     @Enumerated(EnumType.STRING)
     private ModePaiement mode;
 
+    private Double montantPaye;
+
     public enum StatutPaiement {
         EN_ATTENTE, EFFECTUE, ECHEC, REMBOURSE
     }
