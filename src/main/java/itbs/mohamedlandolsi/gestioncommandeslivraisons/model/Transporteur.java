@@ -1,5 +1,6 @@
 package itbs.mohamedlandolsi.gestioncommandeslivraisons.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -25,5 +26,6 @@ public class Transporteur {
     private Double note;
 
     @OneToMany(mappedBy = "transporteur")
+    @JsonManagedReference("transporteur-livraisons")
     private List<Livraison> livraisons;
 }

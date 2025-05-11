@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/livraisons")
+@CrossOrigin
 public class LivraisonController {
 
     private final LivraisonService livraisonService;
@@ -51,10 +52,14 @@ public class LivraisonController {
         try {
             Livraison savedLivraison = livraisonService.createLivraisonFromDTO(livraisonDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedLivraison);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) { // For issues like Commande not found
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
+        } catch (IllegalStateException e) { // For duplicate Livraison for a Commande
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse); // Return 409 Conflict
         } catch (Exception e) {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "An unexpected error occurred on the server.");

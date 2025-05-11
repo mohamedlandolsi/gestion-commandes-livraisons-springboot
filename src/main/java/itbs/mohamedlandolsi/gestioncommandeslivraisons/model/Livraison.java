@@ -1,5 +1,6 @@
 package itbs.mohamedlandolsi.gestioncommandeslivraisons.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,7 @@ public class Livraison {
 
     @ManyToOne
     @JoinColumn(name = "transporteur_id")
+    @JsonBackReference("transporteur-livraisons")
     private Transporteur transporteur;
 
     private LocalDateTime dateLivraison;

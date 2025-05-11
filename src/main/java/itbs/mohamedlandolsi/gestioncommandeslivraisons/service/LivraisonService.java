@@ -61,6 +61,12 @@ public class LivraisonService {
         Commande commande = commandeRepository.findById(dto.getCommandeId())
             .orElseThrow(() -> new IllegalArgumentException("Commande non trouvée avec ID: " + dto.getCommandeId()));
 
+        // Check if a Livraison already exists for this Commande
+        List<Livraison> existingLivraisons = livraisonRepository.findByCommandeId(commande.getId());
+        if (!existingLivraisons.isEmpty()) {
+            throw new IllegalStateException("Une livraison existe déjà pour la commande ID: " + commande.getId());
+        }
+
         Transporteur transporteur = null;
         if (dto.getTransporteurId() != null) {
             transporteur = transporteurRepository.findById(dto.getTransporteurId())
