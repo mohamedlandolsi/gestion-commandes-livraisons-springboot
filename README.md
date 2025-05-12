@@ -20,9 +20,9 @@ Cette application permet de gérer l'ensemble du processus de commande et de liv
 - Spring Security
 - MySQL
 
-### Front-end (à implémenter)
-- Angular
-- Bootstrap
+### Front-end
+- Next.js
+- Shadcn/ui
 
 ## Installation et exécution
 
